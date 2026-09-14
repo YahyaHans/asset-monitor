@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<link rel="manifest" href="./manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+</script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Portfolio // Apple Design Edition</title>
+    <!-- 引入 ECharts 图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            /* Apple Dark Mode Palette */
+            --bg-color: #000000;
+            --card-bg: rgba(28, 28, 30, 0.65);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --card-inner-bg: rgba(255, 255, 255, 0.04);
+            --text-main: #ffffff;
+            --text-sub: rgba(235, 235, 245, 0.6);
+            --text-tertiary: rgba(235, 235, 245, 0.38);
+            
+            /* iOS System Colors */
+            --apple-red: #ff453a;
+            --apple-green: #30d158;
+            --apple-blue: #0a84ff;
+            --apple-orange: #ff9f0a;
+            --apple-segmented-bg: rgba(118, 118, 128, 0.24);
+            --apple-segmented-active: rgba(255, 255, 255, 0.18);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            padding: 24px 20px; 
+            min-height: 100vh; 
+            background-image: radial-gradient(circle at 50% -10%, #1c1c1e 0%, var(--bg-color) 70%);
+        }
+
+        .tabular-num {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+        }
+
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            max-width: 1200px; 
+            margin: 0 auto 20px auto; 
+            padding: 12px 20px; 
+            background: var(--card-bg); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border); 
+            border-radius: 18px; 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .title { 
+            font-size: 15px; 
+            font-weight: 600; 
+            color: #fff; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            letter-spacing: -0.01em;
+            white-space: nowrap; 
+        }
+        
+        .status-bar { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            font-size: 12px; 
+            color: var(--text-sub); 
+            font-weight: 400;
+        }
+
+        .live-badge { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            color: var(--apple-green); 
+            background: rgba(48, 209, 88, 0.12); 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .live-dot { 
+            width: 6px; 
+            height: 6px; 
+            background: var(--apple-green); 
+            border-radius: 50%; 
+            box-shadow: 0 0 8px var(--apple-green); 
+            animation: pulse 2s infinite; 
+        }
+
+        .overview-card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--card-border); 
+            border-radius: 24px; 
+            padding: 24px; 
+            max-width: 850px; 
+            width: 100%; 
+            margin: 0 auto 24px auto; 
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5); 
+        }
+        
+        .overview-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 16px; 
+            flex-wrap: wrap; 
+            gap: 12px; 
+        }
+        
+        .overview-title { 
+            font-size: 17px; 
+            font-weight: 600; 
+            color: #fff; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            letter-spacing: -0.02em;
+        }
+        
+        .overview-title span { 
+            font-size: 11px; 
+            color: var(--apple-blue); 
+            background: rgba(10, 132, 255, 0.12); 
+            padding: 3px 8px; 
+            border-radius: 12px; 
+            font-weight: 500;
+        }
+
+        .chart-tabs { 
+            display: inline-flex; 
+            background: var(--apple-segmented-bg); 
+            padding: 3px; 
+            border-radius: 12px; 
+            gap: 2px;
+        }
+        
+        .chart-tab { 
+            background: transparent; 
+            border: none; 
+            color: var(--text-sub); 
+            padding: 4px 12px; 
+            border-radius: 9px; 
+            font-size: 12px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        
+        .chart-tab:hover { 
+            color: var(--text-main); 
+        }
+        
+        .chart-tab.active { 
+            background: var(--apple-segmented-active); 
+            color: #ffffff; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-weight: 600;
+        }
+
+        .metrics-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; 
+            margin-bottom: 16px; 
+        }
+        
+        .metric-box { 
+            background: var(--card-inner-bg); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 16px; 
+            padding: 14px 16px; 
+        }
+        
+        .metric-label { 
+            font-size: 11px; 
+            color: var(--text-tertiary); 
+            margin-bottom: 6px; 
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        
+        .metric-value { 
+            font-size: 20px; 
+            font-weight: 700; 
+            color: #fff; 
+        }
+        
+        .metric-sub { 
+            font-size: 11px; 
+            margin-top: 4px; 
+            color: var(--text-sub); 
+            display: flex; 
+            gap: 6px; 
+            align-items: center; 
+        }
+
+        .breakdown-bar { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 8px; 
+            margin-bottom: 16px; 
+            background: var(--card-inner-bg); 
+            padding: 10px; 
+            border-radius: 16px; 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        
+        @media (max-width: 900px) {
+            .breakdown-bar { grid-template-columns: repeat(2, 1fr); }
+            .metrics-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .breakdown-bar { grid-template-columns: 1fr; }
+        }
+        
+        .breakdown-item { 
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .breakdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .breakdown-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breakdown-name { 
+            color: var(--text-sub); 
+            font-size: 11px; 
+            font-weight: 500; 
+        }
+
+        .breakdown-val { 
+            color: var(--text-main); 
+            font-size: 14px; 
+            font-weight: 600; 
+            letter-spacing: -0.01em;
+        }
+
+        .breakdown-pnl { 
+            font-size: 11px; 
+            font-weight: 600; 
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--card-border); 
+            border-radius: 22px; 
+            padding: 20px; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); 
+        }
+
+        .card:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            margin-bottom: 12px; 
+        }
+        
+        .company-name { 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #fff; 
+            letter-spacing: -0.01em;
+        }
+        
+        .company-meta { 
+            font-size: 11px; 
+            color: var(--text-sub); 
+            margin-top: 3px; 
+        }
+        
+        .ticker-tag { 
+            font-size: 11px; 
+            padding: 3px 8px; 
+            border-radius: 8px; 
+            background: rgba(255, 255, 255, 0.06); 
+            color: var(--apple-blue); 
+            font-weight: 600; 
+        }
+        
+        .price-section { 
+            display: flex; 
+            align-items: baseline; 
+            gap: 12px; 
+            margin-bottom: 14px; 
+            padding-bottom: 10px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06); 
+        }
+        
+        .current-price { 
+            font-size: 26px; 
+            font-weight: 700; 
+            letter-spacing: -0.03em; 
+        }
+        
+        .change-tag { 
+            font-size: 12px; 
+            font-weight: 600; 
+            padding: 3px 8px; 
+            border-radius: 8px; 
+        }
+
+        .up { color: var(--apple-red); }
+        .down { color: var(--apple-green); }
+        .bg-up { background: rgba(255, 69, 58, 0.12); color: var(--apple-red); }
+        .bg-down { background: rgba(48, 209, 88, 0.12); color: var(--apple-green); }
+        .bg-flat { background: rgba(255, 255, 255, 0.08); color: var(--text-sub); }
+
+        .details-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            font-size: 12px; 
+            margin-bottom: 14px; 
+            background: var(--card-inner-bg); 
+            padding: 10px 14px; 
+            border-radius: 14px; 
+            border: 1px solid rgba(255, 255, 255, 0.04); 
+        }
+        
+        .detail-item { display: flex; justify-content: space-between; align-items: center; }
+        .detail-label { color: var(--text-sub); }
+        .detail-value { color: var(--text-main); font-weight: 500; }
+
+        .chart-container { 
+            width: 100%; 
+            height: 220px; 
+            border-radius: 14px; 
+            background: var(--card-inner-bg); 
+            border: 1px solid rgba(255, 255, 255, 0.04); 
+            margin-top: 10px;
+        }
+        
+        .overview-chart-container { 
+            width: 100%; 
+            height: 290px; 
+            border-radius: 16px; 
+            background: var(--card-inner-bg); 
+            border: 1px solid rgba(255, 255, 255, 0.04); 
+            margin-top: 10px; 
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="title">
+            资产监控终端
+        </div>
+        <div class="status-bar">
+            <div class="live-badge"><span class="live-dot"></span>实时同步</div>
+            <span>更新时间 <span id="update-time" class="tabular-num" style="color:var(--text-main); font-weight:500;">--:--:--</span></span>
+        </div>
+    </div>
+
+    <div class="overview-card">
+        <div class="overview-header">
+            <div class="overview-title">
+                总资产 <span>Master Portfolio</span>
+            </div>
+            <div class="chart-tabs" id="overview-tabs">
+                <button class="chart-tab active" onclick="loadOverviewChart('minute', this)">分时</button>
+                <button class="chart-tab" onclick="loadOverviewChart('day', this)">日K</button>
+                <button class="chart-tab" onclick="loadOverviewChart('week', this)">周K</button>
+                <button class="chart-tab" onclick="loadOverviewChart('month', this)">月K</button>
+                <button class="chart-tab" onclick="loadOverviewChart('year', this)">年K</button>
+            </div>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="metric-label">总资产</div>
+                <div class="metric-value tabular-num" id="total-asset-val">¥--.--</div>
+                <div class="metric-sub" id="total-asset-sub">含锁定股份价值</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">可售出资产</div>
+                <div class="metric-value tabular-num" id="tradable-asset-val" style="color:var(--apple-blue)">¥--.--</div>
+                <div class="metric-sub">当前可售</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">当日总盈亏</div>
+                <div class="metric-value tabular-num" id="total-change-val">¥--.--</div>
+                <div class="metric-sub tabular-num" id="total-change-pct-sub">--%</div>
+            </div>
+        </div>
+
+        <div class="breakdown-bar" id="breakdown-bar">
+        </div>
+
+        <div class="overview-chart-container" id="overview-chart"></div>
+    </div>
+
+    <div class="grid-container" id="board-container">
+    </div>
+
+    <script>
+        const stockConfigs = [
+            { id: 'sh603259', tcCode: 'sh603259', emId: '1.603259', name: '药明康德', market: '沪市A股', currency: '￥', shares: 8000, tradableShares: 8000, lockedShares: 0, fx: 1 },
+            { id: 'hk02269', tcCode: 'hk02269', emId: '116.02269', name: '药明生物', market: '港股主板', currency: 'HK$', shares: 6500, tradableShares: 6500, lockedShares: 0, fx: 0.92 },
+            { id: 'hk03696', tcCode: 'hk03696', emId: '116.03696', name: '英矽智能', market: '港股主板', currency: 'HK$', shares: 2000, tradableShares: 2000, lockedShares: 0, fx: 0.92 },
+            { id: 'usPDD', tcCode: 'usPDD', emId: '105.PDD', name: '拼多多', market: '纳斯达克', currency: '$', shares: 1334, tradableShares: 188, lockedShares: 1146, fx: 7.20 }
+        ];
+
+        const charts = {};
+        let overviewChart = null;
+        let latestMarketData = {};
+
+        function initBoard() {
+            const container = document.getElementById('board-container');
+            stockConfigs.forEach(stock => {
+                container.innerHTML += `
+                    <div class="card" id="card-${stock.id}">
+                        <div class="card-header">
+                            <div>
+                                <div class="company-name">${stock.name}</div>
+                                <div class="company-meta">持仓: ${stock.shares.toLocaleString()}股</div>
+                            </div>
+                            <div class="ticker-tag">${stock.id.toUpperCase()}</div>
+                        </div>
+                        <div class="price-section">
+                            <div class="current-price tabular-num" id="price-${stock.id}">--.--</div>
+                            <div class="change-tag bg-flat tabular-num" id="change-${stock.id}">--%</div>
+                        </div>
+                        <div class="details-grid">
+                            <div class="detail-item"><span class="detail-label">持仓金额</span><span class="detail-value tabular-num" id="rmb-val-${stock.id}">¥--</span></div>
+                            <div class="detail-item"><span class="detail-label">单日盈亏</span><span class="detail-value tabular-num" id="rmb-pnl-${stock.id}">¥--</span></div>
+                            <div class="detail-item"><span class="detail-label">今开 / 昨收</span><span class="detail-value tabular-num" id="open-${stock.id}">--</span></div>
+                            <div class="detail-item"><span class="detail-label">最高 / 最低</span><span class="detail-value tabular-num" id="high-${stock.id}">--</span></div>
+                            <div class="detail-item"><span class="detail-label">公司市值</span><span class="detail-value tabular-num" id="mktval-${stock.id}">--</span></div>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end;">
+                            <div class="chart-tabs" id="tabs-${stock.id}">
+                                <button class="chart-tab active" onclick="loadChart('${stock.id}', 'minute', this)">分时</button>
+                                <button class="chart-tab" onclick="loadChart('${stock.id}', 'day', this)">日K</button>
+                                <button class="chart-tab" onclick="loadChart('${stock.id}', 'week', this)">周K</button>
+                                <button class="chart-tab" onclick="loadChart('${stock.id}', 'month', this)">月K</button>
+                                <button class="chart-tab" onclick="loadChart('${stock.id}', 'year', this)">年K</button>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="chart-${stock.id}"></div>
+                    </div>
+                `;
+            });
+
+            stockConfigs.forEach(stock => {
+                charts[stock.id] = echarts.init(document.getElementById(`chart-${stock.id}`));
+                loadChart(stock.id, 'minute', document.querySelector(`#tabs-${stock.id} button`));
+            });
+
+            overviewChart = echarts.init(document.getElementById('overview-chart'));
+            loadOverviewChart('minute', document.querySelector('#overview-tabs button'));
+        }
+
+        function calculateMarketVal(id, currentPrice, tencentArr = null) {
+            let mktValCurrency = 0;
+            if (tencentArr) {
+                const val45 = parseFloat(tencentArr[45]);
+                const val47 = parseFloat(tencentArr[47]);
+                if (!isNaN(val45) && val45 > 0) {
+                    mktValCurrency = val45 * 100000000;
+                } else if (!isNaN(val47) && val47 > 0) {
+                    mktValCurrency = val47 * 100000000;
+                }
+            }
+            if (!mktValCurrency || mktValCurrency <= 0) {
+                const factors = {
+                    'sh603259': 2950000000, // 药明康德总股本约29.5亿股
+                    'hk02269': 4240000000,  // 药明生物总股本约42.4亿股
+                    'hk03696': 500000000,   // 英矽智能预估总股本
+                    'usPDD': 1360000000     // 拼多多总股本(ADS折算)约13.6亿
+                };
+                const shares = factors[id] || 1000000000;
+                mktValCurrency = currentPrice * shares;
+            }
+            return mktValCurrency;
+        }
+
+        function updateMarketValDisplay(id, currency, mktVal) {
+            if (mktVal && !isNaN(mktVal) && mktVal > 0) {
+                const yi = mktVal / 100000000;
+                let mktStr = '';
+                if (yi >= 10000) {
+                    mktStr = `${currency}${(yi/10000).toFixed(2)}万亿`;
+                } else {
+                    mktStr = `${currency}${yi.toFixed(2)}亿`;
+                }
+                const el = document.getElementById(`mktval-${id}`);
+                if (el) el.innerText = mktStr;
+            }
+        }
+
+        function fetchRealtimeData() {
+            const domesticCodes = stockConfigs.filter(s => s.id !== 'usPDD').map(s => s.tcCode).join(',');
+            
+            let domesticLoaded = !domesticCodes;
+            let pddLoaded = false;
+
+            function checkAndUpdate() {
+                if (domesticLoaded && pddLoaded) {
+                    document.getElementById('update-time').innerText = new Date().toLocaleTimeString();
+                    calculatePortfolioSummary();
+                }
+            }
+
+            if (domesticCodes) {
+                const script1 = document.createElement('script');
+                script1.src = `https://qt.gtimg.cn/q=${domesticCodes}&_=${Date.now()}`;
+                script1.onload = () => {
+                    stockConfigs.filter(s => s.id !== 'usPDD').forEach(item => {
+                        const rawData = window[`v_${item.tcCode}`];
+                        if (rawData) {
+                            const arr = rawData.split('~');
+                            updatePriceUI(item.id, {
+                                current: parseFloat(arr[3]), prevClose: parseFloat(arr[4]),
+                                open: parseFloat(arr[5]), high: parseFloat(arr[33]),
+                                low: parseFloat(arr[34]), changePct: parseFloat(arr[32]),
+                                changeAmt: parseFloat(arr[31]), currency: item.currency
+                            }, arr);
+                        }
+                    });
+                    domesticLoaded = true;
+                    checkAndUpdate();
+                    if (script1.parentNode) document.body.removeChild(script1);
+                };
+                script1.onerror = () => {
+                    domesticLoaded = true;
+                    checkAndUpdate();
+                    if (script1.parentNode) document.body.removeChild(script1);
+                };
+                document.body.appendChild(script1);
+            }
+
+            const script2 = document.createElement('script');
+            script2.src = `https://qt.gtimg.cn/q=usPDD&_=${Date.now()}`;
+            script2.onload = () => {
+                const rawData = window['v_usPDD'];
+                if (rawData) {
+                    const arr = rawData.split('~');
+                    updatePriceUI('usPDD', {
+                        current: parseFloat(arr[3]), prevClose: parseFloat(arr[4]),
+                        open: parseFloat(arr[5]), high: parseFloat(arr[33]),
+                        low: parseFloat(arr[34]), changePct: parseFloat(arr[32]),
+                        changeAmt: parseFloat(arr[31]), currency: '$'
+                    }, arr);
+                }
+                pddLoaded = true;
+                checkAndUpdate();
+                if (script2.parentNode) document.body.removeChild(script2);
+            };
+            script2.onerror = () => {
+                pddLoaded = true;
+                checkAndUpdate();
+                if (script2.parentNode) document.body.removeChild(script2);
+            };
+            document.body.appendChild(script2);
+
+            // 保持东方财富接口兜底（部分A股支持）
+            stockConfigs.forEach(stock => {
+                const cbName = `cb_quote_${stock.id}_${Date.now()}`;
+                const script = document.createElement('script');
+                script.src = `https://push2.eastmoney.com/api/qt/stock/get?secid=${stock.emId}&fields=f57,f58,f116&cb=${cbName}`;
+                window[cbName] = function(res) {
+                    if (res && res.data && res.data.f116) {
+                        updateMarketValDisplay(stock.id, stock.currency, res.data.f116);
+                    }
+                    if (script.parentNode) document.body.removeChild(script);
+                    delete window[cbName];
+                };
+                script.onerror = () => {
+                    if (script.parentNode) document.body.removeChild(script);
+                    delete window[cbName];
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        function updatePriceUI(id, data, tencentArr = null) {
+            if (isNaN(data.current)) return;
+            latestMarketData[id] = data;
+
+            const stock = stockConfigs.find(s => s.id === id);
+            const priceEl = document.getElementById(`price-${id}`);
+            const changeEl = document.getElementById(`change-${id}`);
+            priceEl.innerText = `${data.currency}${data.current.toFixed(2)}`;
+            document.getElementById(`open-${id}`).innerText = `${data.open.toFixed(2)} / ${data.prevClose.toFixed(2)}`;
+            document.getElementById(`high-${id}`).innerText = `${data.high.toFixed(2)} / ${data.low.toFixed(2)}`;
+            
+            const sign = data.changeAmt > 0 ? '+' : '';
+            changeEl.innerText = `${sign}${data.changePct.toFixed(2)}%`;
+            
+            const isUp = data.changeAmt > 0;
+            const isDown = data.changeAmt < 0;
+            priceEl.className = 'current-price tabular-num ' + (isUp ? 'up' : isDown ? 'down' : '');
+            changeEl.className = 'change-tag tabular-num ' + (isUp ? 'bg-up' : isDown ? 'bg-down' : 'bg-flat');
+
+            const rmbValue = data.current * stock.shares * stock.fx;
+            const rmbPnl = data.changeAmt * stock.shares * stock.fx;
+            
+            let valDisplay = `¥${rmbValue.toLocaleString('zh-CN', {maximumFractionDigits: 0})}`;
+            if (stock.lockedShares > 0) {
+                const tradableValRMB = data.current * stock.tradableShares * stock.fx;
+                valDisplay += ` <span style="font-size:10px; color:var(--apple-blue); background:rgba(10,132,255,0.12); padding:1px 5px; border-radius:5px; margin-left:4px; font-weight:normal;">可售 ¥${tradableValRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})}</span>`;
+            }
+            document.getElementById(`rmb-val-${id}`).innerHTML = valDisplay;
+            
+            const pnlSign = rmbPnl > 0 ? '+' : '';
+            const pnlEl = document.getElementById(`rmb-pnl-${id}`);
+            pnlEl.innerText = `${pnlSign}¥${rmbPnl.toLocaleString('zh-CN', {maximumFractionDigits: 0})}`;
+            pnlEl.className = 'detail-value tabular-num ' + (rmbPnl > 0 ? 'up' : rmbPnl < 0 ? 'down' : '');
+
+            // 联动计算并更新公司市值（腾讯数据 + 智能总股本估算兜底，确保绝对不为空）
+            const mktVal = calculateMarketVal(id, data.current, tencentArr);
+            updateMarketValDisplay(id, data.currency, mktVal);
+        }
+
+        function calculatePortfolioSummary() {
+            let totalAssetsRMB = 0;
+            let tradableAssetsRMB = 0;
+            let totalDailyPnlRMB = 0;
+            let breakdownHtml = '';
+
+            stockConfigs.forEach(stock => {
+                const data = latestMarketData[stock.id];
+                if (!data || isNaN(data.current)) return;
+
+                const valRMB = data.current * stock.shares * stock.fx;
+                const tradableValRMB = data.current * stock.tradableShares * stock.fx;
+                const pnlRMB = data.changeAmt * stock.shares * stock.fx;
+
+                totalAssetsRMB += valRMB;
+                tradableAssetsRMB += tradableValRMB;
+                totalDailyPnlRMB += pnlRMB;
+
+                const pnlSign = pnlRMB > 0 ? '+' : '';
+                const pnlClass = pnlRMB > 0 ? 'up' : pnlRMB < 0 ? 'down' : '';
+
+                let extraSub = '';
+                if (stock.lockedShares > 0) {
+                    extraSub = `
+                        <div style="font-size:10px; color:var(--apple-blue); margin-top:3px; display:flex; justify-content:space-between; border-top:1px dashed rgba(255,255,255,0.06); padding-top:3px;">
+                            <span>可售金额</span>
+                            <span class="tabular-num">¥${tradableValRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})}</span>
+                        </div>
+                    `;
+                }
+
+                breakdownHtml += `
+                    <div class="breakdown-item">
+                        <div class="breakdown-header-row">
+                            <span class="breakdown-name">${stock.name}</span>
+                            <span class="breakdown-pnl tabular-num ${pnlClass}">${pnlSign}¥${pnlRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})}</span>
+                        </div>
+                        <div class="breakdown-val tabular-num">¥${valRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})} <span style="font-size:11px; color:var(--text-sub); font-weight:normal;">(${stock.shares.toLocaleString()}股)</span></div>
+                        ${extraSub}
+                    </div>
+                `;
+            });
+
+            if (totalAssetsRMB > 0) {
+                document.getElementById('total-asset-val').innerText = `¥${totalAssetsRMB.toLocaleString('zh-CN', {maximumFractionDigits: 2})}`;
+                document.getElementById('tradable-asset-val').innerText = `¥${tradableAssetsRMB.toLocaleString('zh-CN', {maximumFractionDigits: 2})}`;
+                
+                const totalPnlSign = totalDailyPnlRMB > 0 ? '+' : '';
+                const totalPnlPct = (totalDailyPnlRMB / (totalAssetsRMB - totalDailyPnlRMB)) * 100;
+                const totalPnlEl = document.getElementById('total-change-val');
+                totalPnlEl.innerText = `${totalPnlSign}¥${totalDailyPnlRMB.toLocaleString('zh-CN', {maximumFractionDigits: 2})}`;
+                totalPnlEl.className = 'metric-value tabular-num ' + (totalDailyPnlRMB > 0 ? 'up' : totalDailyPnlRMB < 0 ? 'down' : '');
+                
+                document.getElementById('total-change-pct-sub').innerHTML = `当日变化: <span class="${totalDailyPnlRMB > 0 ? 'up' : totalDailyPnlRMB < 0 ? 'down' : ''}">${totalPnlSign}${totalPnlPct.toFixed(2)}%</span>`;
+                document.getElementById('breakdown-bar').innerHTML = breakdownHtml;
+            }
+        }
+
+        function loadChart(id, type, btnElement) {
+            if (btnElement) {
+                const tabs = document.querySelectorAll(`#tabs-${id} .chart-tab`);
+                tabs.forEach(tab => tab.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+
+            charts[id].showLoading({ text: '', color: '#0a84ff', textColor: 'rgba(235,235,245,0.6)', maskColor: 'rgba(28, 28, 30, 0.4)' });
+
+            const stock = stockConfigs.find(s => s.id === id);
+            const cbName = `cb_${type}_${id.replace('hk','').replace('sh','').replace('us','')}`;
+            const script = document.createElement('script');
+            let url = '';
+
+            window[cbName] = function(res) {
+                if (type === 'minute') {
+                    renderMinuteChart(id, res.data);
+                } else {
+                    renderKLineChart(id, res.data);
+                }
+                if (script.parentNode) document.body.removeChild(script);
+                delete window[cbName];
+            };
+
+            script.onerror = () => {
+                charts[id].hideLoading();
+                if (script.parentNode) document.body.removeChild(script);
+                delete window[cbName];
+            };
+
+            if (type === 'minute') {
+                url = `https://push2.eastmoney.com/api/qt/stock/trends2/get?secid=${stock.emId}&fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13&fields2=f51,f52,f53,f54,f55,f56,f57,f58&cb=${cbName}`;
+            } else {
+                const kltMap = { 'day': 101, 'week': 102, 'month': 103, 'year': 106 };
+                const limitMap = { 'day': 120, 'week': 104, 'month': 60, 'year': 20 };
+                url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${stock.emId}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=${kltMap[type]}&fqt=1&end=20500000&lmt=${limitMap[type]}&cb=${cbName}`;
+            }
+
+            script.src = url;
+            document.body.appendChild(script);
+        }
+
+        function loadOverviewChart(type, btnElement) {
+            if (btnElement) {
+                const tabs = document.querySelectorAll('#overview-tabs .chart-tab');
+                tabs.forEach(tab => tab.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+
+            overviewChart.showLoading({ text: '', color: '#0a84ff', textColor: 'rgba(235,235,245,0.6)', maskColor: 'rgba(28, 28, 30, 0.4)' });
+
+            if (type === 'minute') {
+                fetchOverviewMinuteData();
+                return;
+            }
+
+            const kltMap = { 'day': 101, 'week': 102, 'month': 103, 'year': 106 };
+            const limitMap = { 'day': 300, 'week': 150, 'month': 60, 'year': 20 };
+
+            let completed = 0;
+            let histResults = {};
+
+            stockConfigs.forEach(stock => {
+                const cbName = `cb_master_${stock.id}_${type}_${Date.now()}`;
+                const script = document.createElement('script');
+                const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${stock.emId}&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=${kltMap[type]}&fqt=1&beg=20260101&end=20500000&lmt=${limitMap[type]}&cb=${cbName}`;
+
+                window[cbName] = function(res) {
+                    histResults[stock.id] = res.data && res.data.klines ? res.data.klines : [];
+                    completed++;
+                    if (script.parentNode) document.body.removeChild(script);
+                    delete window[cbName];
+                    if (completed === stockConfigs.length) {
+                        renderOverviewKLine(histResults);
+                    }
+                };
+                script.onerror = () => {
+                    histResults[stock.id] = [];
+                    completed++;
+                    if (script.parentNode) document.body.removeChild(script);
+                    delete window[cbName];
+                    if (completed === stockConfigs.length) {
+                        renderOverviewKLine(histResults);
+                    }
+                };
+                script.src = url;
+                document.body.appendChild(script);
+            });
+        }
+
+        function fetchOverviewMinuteData() {
+            let completed = 0;
+            let minResults = {};
+
+            stockConfigs.forEach(stock => {
+                const cbName = `cb_master_min_${stock.id}_${Date.now()}`;
+                const script = document.createElement('script');
+                const url = `https://push2.eastmoney.com/api/qt/stock/trends2/get?secid=${stock.emId}&fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13&fields2=f51,f52,f53,f54,f55,f56,f57,f58&cb=${cbName}`;
+
+                window[cbName] = function(res) {
+                    minResults[stock.id] = res.data && res.data.trends ? res.data.trends : [];
+                    completed++;
+                    if (script.parentNode) document.body.removeChild(script);
+                    delete window[cbName];
+                    if (completed === stockConfigs.length) {
+                        renderOverviewMinute(minResults);
+                    }
+                };
+                script.onerror = () => {
+                    minResults[stock.id] = [];
+                    completed++;
+                    if (script.parentNode) document.body.removeChild(script);
+                    delete window[cbName];
+                    if (completed === stockConfigs.length) {
+                        renderOverviewMinute(minResults);
+                    }
+                };
+                script.src = url;
+                document.body.appendChild(script);
+            });
+        }
+
+        const appleTooltipConfig = {
+            backgroundColor: 'rgba(32, 32, 35, 0.92)',
+            borderColor: 'rgba(255, 255, 255, 0.12)',
+            borderWidth: 1,
+            borderRadius: 12,
+            padding: [10, 14],
+            textStyle: { color: '#ffffff', fontSize: 12, fontFamily: '-apple-system' },
+            extraCssText: 'backdrop-filter: blur(12px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);'
+        };
+
+        function renderOverviewMinute(minResults) {
+            overviewChart.hideLoading();
+            let timeMap = {};
+            stockConfigs.forEach(stock => {
+                const trends = minResults[stock.id] || [];
+                trends.forEach(item => {
+                    const parts = item.split(',');
+                    const timeStr = parts[0].split(' ')[1];
+                    const price = parseFloat(parts[1]);
+                    if (!timeMap[timeStr]) timeMap[timeStr] = {};
+                    timeMap[timeStr][stock.id] = price;
+                });
+            });
+
+            const times = Object.keys(timeMap).sort();
+            const totalAssetPrices = [];
+            let lastValidPrices = {};
+
+            times.forEach(t => {
+                let sumRMB = 0;
+                let hasData = false;
+                stockConfigs.forEach(stock => {
+                    if (timeMap[t][stock.id] !== undefined) {
+                        lastValidPrices[stock.id] = timeMap[t][stock.id];
+                    }
+                    if (lastValidPrices[stock.id] !== undefined) {
+                        sumRMB += lastValidPrices[stock.id] * stock.shares * stock.fx;
+                        hasData = true;
+                    }
+                });
+                if (hasData) {
+                    totalAssetPrices.push(parseFloat(sumRMB.toFixed(2)));
+                } else {
+                    totalAssetPrices.push(null);
+                }
+            });
+
+            const option = {
+                grid: { left: 55, right: 16, top: 20, bottom: 25 },
+                tooltip: { 
+                    ...appleTooltipConfig,
+                    trigger: 'axis', 
+                    axisPointer: { type: 'line', lineStyle: { color: 'rgba(255,255,255,0.2)', type: 'solid' } },
+                    formatter: function(params) {
+                        const p = params[0];
+                        return `<div style="color:rgba(235,235,245,0.6);font-size:11px;margin-bottom:4px;">时间：${p.name}</div><div style="font-weight:600;">总资产：¥${p.value.toLocaleString()}</div>`;
+                    }
+                },
+                xAxis: { type: 'category', data: times, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                yAxis: { 
+                    type: 'value', 
+                    scale: true, 
+                    splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, 
+                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10, formatter: val => '¥' + (val/10000).toFixed(1) + '万' }
+                },
+                series: [{
+                    type: 'line',
+                    data: totalAssetPrices,
+                    showSymbol: false,
+                    smooth: true,
+                    lineStyle: { color: '#0a84ff', width: 2 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(10, 132, 255, 0.28)' },
+                            { offset: 1, color: 'rgba(10, 132, 255, 0.0)' }
+                        ])
+                    }
+                }]
+            };
+            overviewChart.setOption(option, true);
+        }
+
+        function renderOverviewKLine(histResults) {
+            overviewChart.hideLoading();
+            let dateMap = {};
+
+            stockConfigs.forEach(stock => {
+                const klines = histResults[stock.id] || [];
+                klines.forEach(item => {
+                    const parts = item.split(',');
+                    const date = parts[0];
+                    const open = parseFloat(parts[1]);
+                    const close = parseFloat(parts[2]);
+                    const high = parseFloat(parts[3]);
+                    const low = parseFloat(parts[4]);
+
+                    if (!dateMap[date]) dateMap[date] = {};
+                    dateMap[date][stock.id] = { open, close, high, low };
+                });
+            });
+
+            const dates = Object.keys(dateMap).sort();
+            const klineValues = [];
+            let lastClose = {};
+
+            dates.forEach(date => {
+                let sumOpen = 0, sumClose = 0, sumHigh = 0, sumLow = 0;
+                let valid = true;
+
+                stockConfigs.forEach(stock => {
+                    if (dateMap[date][stock.id]) {
+                        lastClose[stock.id] = dateMap[date][stock.id];
+                    }
+                    if (lastClose[stock.id]) {
+                        const s = lastClose[stock.id];
+                        sumOpen += s.open * stock.shares * stock.fx;
+                        sumClose += s.close * stock.shares * stock.fx;
+                        sumHigh += s.high * stock.shares * stock.fx;
+                        sumLow += s.low * stock.shares * stock.fx;
+                    } else {
+                        valid = false;
+                    }
+                });
+
+                if (valid) {
+                    klineValues.push([
+                        parseFloat(sumOpen.toFixed(2)),
+                        parseFloat(sumClose.toFixed(2)),
+                        parseFloat(sumLow.toFixed(2)),
+                        parseFloat(sumHigh.toFixed(2))
+                    ]);
+                }
+            });
+
+            const option = {
+                grid: { left: 55, right: 16, top: 20, bottom: 25 },
+                tooltip: {
+                    ...appleTooltipConfig,
+                    trigger: 'axis',
+                    axisPointer: { type: 'line', lineStyle: { color: 'rgba(255,255,255,0.2)' } },
+                    formatter: function (params) {
+                        const p = params[0];
+                        if (!p || !p.data) return '';
+                        return `<div style="color:rgba(235,235,245,0.6);font-size:11px;margin-bottom:4px;">日期：${p.name}</div>` +
+                               `期初：¥${p.data[1].toLocaleString()}<br/>期末：¥${p.data[2].toLocaleString()}<br/>` +
+                               `最低：¥${p.data[3].toLocaleString()}<br/>最高：¥${p.data[4].toLocaleString()}`;
+                    }
+                },
+                xAxis: { type: 'category', data: dates, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                yAxis: { 
+                    type: 'value', 
+                    scale: true, 
+                    splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, 
+                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10, formatter: val => '¥' + (val/10000).toFixed(1) + '万' }
+                },
+                dataZoom: [{ type: 'inside', start: 0, end: 100 }],
+                series: [{
+                    type: 'candlestick',
+                    data: klineValues,
+                    itemStyle: {
+                        color: '#ff453a',
+                        color0: '#30d158',
+                        borderColor: '#ff453a',
+                        borderColor0: '#30d158'
+                    }
+                }]
+            };
+            overviewChart.setOption(option, true);
+        }
+
+        function renderMinuteChart(id, dataObj) {
+            charts[id].hideLoading();
+            if (!dataObj || !dataObj.trends) return;
+            const times = [], prices = [];
+            const prePrice = dataObj.prePrice;
+
+            dataObj.trends.forEach(item => {
+                const parts = item.split(',');
+                times.push(parts[0].split(' ')[1]);
+                prices.push(parseFloat(parts[1]));
+            });
+
+            const option = {
+                grid: { left: 42, right: 12, top: 15, bottom: 22 },
+                tooltip: { 
+                    ...appleTooltipConfig,
+                    trigger: 'axis', 
+                    axisPointer: { type: 'line', lineStyle: { color: 'rgba(255,255,255,0.2)' } }
+                },
+                xAxis: { type: 'category', data: times, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                yAxis: { 
+                    type: 'value', 
+                    scale: true, 
+                    splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, 
+                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 }
+                },
+                series: [{
+                    type: 'line',
+                    data: prices,
+                    showSymbol: false,
+                    smooth: true,
+                    lineStyle: { color: '#0a84ff', width: 2 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(10, 132, 255, 0.25)' },
+                            { offset: 1, color: 'rgba(10, 132, 255, 0.0)' }
+                        ])
+                    },
+                    markLine: {
+                        silent: true,
+                        symbol: 'none',
+                        data: [{ yAxis: prePrice }],
+                        lineStyle: { color: 'rgba(235, 235, 245, 0.25)', type: 'dashed' },
+                        label: { show: false }
+                    }
+                }]
+            };
+            charts[id].setOption(option, true);
+        }
+
+        function renderKLineChart(id, dataObj) {
+            charts[id].hideLoading();
+            if (!dataObj || !dataObj.klines) return;
+            const dates = [], values = [];
+
+            dataObj.klines.forEach(item => {
+                const parts = item.split(',');
+                dates.push(parts[0]);
+                values.push([parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[4]), parseFloat(parts[3])]);
+            });
+
+            const option = {
+                grid: { left: 42, right: 12, top: 15, bottom: 22 },
+                tooltip: {
+                    ...appleTooltipConfig,
+                    trigger: 'axis',
+                    axisPointer: { type: 'line', lineStyle: { color: 'rgba(255,255,255,0.2)' } },
+                    formatter: function (params) {
+                        const p = params[0];
+                        return `<div style="color:rgba(235,235,245,0.6);font-size:11px;margin-bottom:4px;">日期：${p.name}</div>` +
+                               `开：${p.data[1]} | 收：${p.data[2]}<br/>低：${p.data[3]} | 高：${p.data[4]}`;
+                    }
+                },
+                xAxis: { type: 'category', data: dates, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                yAxis: { type: 'value', scale: true, splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                dataZoom: [{ type: 'inside', start: 20, end: 100 }],
+                series: [{
+                    type: 'candlestick',
+                    data: values,
+                    itemStyle: {
+                        color: '#ff453a',
+                        color0: '#30d158',
+                        borderColor: '#ff453a',
+                        borderColor0: '#30d158'
+                    }
+                }]
+            };
+            charts[id].setOption(option, true);
+        }
+
+        initBoard();
+        fetchRealtimeData();
+        setInterval(fetchRealtimeData, 5000);
+
+        window.addEventListener('resize', () => {
+            Object.values(charts).forEach(chart => chart.resize());
+            if (overviewChart) overviewChart.resize();
+        });
+    </script>
+</body>
+</html>

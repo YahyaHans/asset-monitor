@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-
-<link rel="manifest" href="./manifest.json">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-  }
-</script>
-
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asset Portfolio // Apple Design Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>资产看板</title>
+
+    <link rel="manifest" href="./manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js');
+      }
+    </script>
+
     <!-- 引入 ECharts 图表库 -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <style>
         :root {
-            /* Apple Dark Mode Palette */
             --bg-color: #000000;
-            --card-bg: rgba(28, 28, 30, 0.65);
-            --card-border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(28, 28, 30, 0.75);
+            --card-border: rgba(255, 255, 255, 0.12);
             --card-inner-bg: rgba(255, 255, 255, 0.04);
             --text-main: #ffffff;
             --text-sub: rgba(235, 235, 245, 0.6);
             --text-tertiary: rgba(235, 235, 245, 0.38);
             
-            /* iOS System Colors */
             --apple-red: #ff453a;
             --apple-green: #30d158;
             --apple-blue: #0a84ff;
@@ -40,14 +40,16 @@
             padding: 0; 
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body { 
             background-color: var(--bg-color); 
             color: var(--text-main); 
-            padding: 24px 20px; 
+            padding: calc(12px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)) 16px; 
             min-height: 100vh; 
             background-image: radial-gradient(circle at 50% -10%, #1c1c1e 0%, var(--bg-color) 70%);
+            overflow-x: hidden;
         }
 
         .tabular-num {
@@ -59,14 +61,15 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            max-width: 1200px; 
-            margin: 0 auto 20px auto; 
-            padding: 12px 20px; 
+            width: 100%; 
+            max-width: 800px;
+            margin: 0 auto 16px auto; 
+            padding: 12px 16px; 
             background: var(--card-bg); 
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--card-border); 
-            border-radius: 18px; 
+            border-radius: 16px; 
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
         
@@ -76,7 +79,7 @@
             color: #fff; 
             display: flex; 
             align-items: center; 
-            gap: 10px; 
+            gap: 8px; 
             letter-spacing: -0.01em;
             white-space: nowrap; 
         }
@@ -84,8 +87,8 @@
         .status-bar { 
             display: flex; 
             align-items: center; 
-            gap: 16px; 
-            font-size: 12px; 
+            gap: 12px; 
+            font-size: 11px; 
             color: var(--text-sub); 
             font-weight: 400;
         }
@@ -93,21 +96,21 @@
         .live-badge { 
             display: inline-flex; 
             align-items: center; 
-            gap: 6px; 
+            gap: 5px; 
             color: var(--apple-green); 
             background: rgba(48, 209, 88, 0.12); 
-            padding: 4px 10px; 
+            padding: 3px 8px; 
             border-radius: 20px; 
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
         }
         
         .live-dot { 
-            width: 6px; 
-            height: 6px; 
+            width: 5px; 
+            height: 5px; 
             background: var(--apple-green); 
             border-radius: 50%; 
-            box-shadow: 0 0 8px var(--apple-green); 
+            box-shadow: 0 0 6px var(--apple-green); 
             animation: pulse 2s infinite; 
         }
 
@@ -116,11 +119,11 @@
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--card-border); 
-            border-radius: 24px; 
-            padding: 24px; 
-            max-width: 850px; 
+            border-radius: 20px; 
+            padding: 18px 16px; 
+            max-width: 800px; 
             width: 100%; 
-            margin: 0 auto 24px auto; 
+            margin: 0 auto 20px auto; 
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5); 
         }
         
@@ -128,132 +131,117 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin-bottom: 16px; 
-            flex-wrap: wrap; 
-            gap: 12px; 
+            margin-bottom: 14px; 
+            gap: 8px; 
         }
         
         .overview-title { 
-            font-size: 17px; 
+            font-size: 16px; 
             font-weight: 600; 
             color: #fff; 
             display: flex; 
             align-items: center; 
-            gap: 10px; 
+            gap: 8px; 
             letter-spacing: -0.02em;
         }
         
         .overview-title span { 
-            font-size: 11px; 
+            font-size: 10px; 
             color: var(--apple-blue); 
             background: rgba(10, 132, 255, 0.12); 
-            padding: 3px 8px; 
-            border-radius: 12px; 
+            padding: 2px 6px; 
+            border-radius: 10px; 
             font-weight: 500;
         }
 
         .chart-tabs { 
             display: inline-flex; 
             background: var(--apple-segmented-bg); 
-            padding: 3px; 
-            border-radius: 12px; 
+            padding: 2px; 
+            border-radius: 10px; 
             gap: 2px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
         }
         
         .chart-tab { 
             background: transparent; 
             border: none; 
             color: var(--text-sub); 
-            padding: 4px 12px; 
-            border-radius: 9px; 
-            font-size: 12px; 
+            padding: 4px 10px; 
+            border-radius: 8px; 
+            font-size: 11px; 
             font-weight: 500; 
             cursor: pointer; 
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
-        }
-        
-        .chart-tab:hover { 
-            color: var(--text-main); 
+            white-space: nowrap;
+            transition: all 0.2s ease; 
         }
         
         .chart-tab.active { 
             background: var(--apple-segmented-active); 
             color: #ffffff; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
             font-weight: 600;
         }
 
         .metrics-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; 
-            margin-bottom: 16px; 
+            gap: 10px; 
+            margin-bottom: 14px; 
         }
         
         .metric-box { 
             background: var(--card-inner-bg); 
             border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-radius: 16px; 
-            padding: 14px 16px; 
+            border-radius: 14px; 
+            padding: 12px; 
         }
         
         .metric-label { 
-            font-size: 11px; 
+            font-size: 10px; 
             color: var(--text-tertiary); 
-            margin-bottom: 6px; 
+            margin-bottom: 4px; 
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.03em;
         }
         
         .metric-value { 
-            font-size: 20px; 
+            font-size: 17px; 
             font-weight: 700; 
             color: #fff; 
         }
         
         .metric-sub { 
-            font-size: 11px; 
-            margin-top: 4px; 
+            font-size: 10px; 
+            margin-top: 3px; 
             color: var(--text-sub); 
             display: flex; 
-            gap: 6px; 
+            gap: 4px; 
             align-items: center; 
         }
 
         .breakdown-bar { 
             display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
+            grid-template-columns: repeat(2, 1fr); 
             gap: 8px; 
-            margin-bottom: 16px; 
+            margin-bottom: 14px; 
             background: var(--card-inner-bg); 
             padding: 10px; 
-            border-radius: 16px; 
+            border-radius: 14px; 
             border: 1px solid rgba(255, 255, 255, 0.05); 
-        }
-        
-        @media (max-width: 900px) {
-            .breakdown-bar { grid-template-columns: repeat(2, 1fr); }
-            .metrics-grid { grid-template-columns: 1fr; }
-        }
-
-        @media (max-width: 600px) {
-            .breakdown-bar { grid-template-columns: 1fr; }
         }
         
         .breakdown-item { 
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 12px;
-            padding: 10px 12px;
+            border-radius: 10px;
+            padding: 8px 10px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            transition: background 0.2s ease;
-        }
-
-        .breakdown-item:hover {
-            background: rgba(255, 255, 255, 0.05);
+            gap: 3px;
         }
 
         .breakdown-header-row {
@@ -270,21 +258,21 @@
 
         .breakdown-val { 
             color: var(--text-main); 
-            font-size: 14px; 
+            font-size: 13px; 
             font-weight: 600; 
             letter-spacing: -0.01em;
         }
 
         .breakdown-pnl { 
-            font-size: 11px; 
+            font-size: 10px; 
             font-weight: 600; 
         }
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
@@ -293,42 +281,35 @@
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--card-border); 
-            border-radius: 22px; 
-            padding: 20px; 
-            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+            border-radius: 20px; 
+            padding: 16px; 
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); 
-        }
-
-        .card:hover { 
-            transform: translateY(-2px);
-            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
-            border-color: rgba(255, 255, 255, 0.18);
         }
 
         .card-header { 
             display: flex; 
             justify-content: space-between; 
             align-items: flex-start; 
-            margin-bottom: 12px; 
+            margin-bottom: 10px; 
         }
         
         .company-name { 
-            font-size: 16px; 
+            font-size: 15px; 
             font-weight: 600; 
             color: #fff; 
             letter-spacing: -0.01em;
         }
         
         .company-meta { 
-            font-size: 11px; 
+            font-size: 10px; 
             color: var(--text-sub); 
-            margin-top: 3px; 
+            margin-top: 2px; 
         }
         
         .ticker-tag { 
-            font-size: 11px; 
-            padding: 3px 8px; 
-            border-radius: 8px; 
+            font-size: 10px; 
+            padding: 2px 6px; 
+            border-radius: 6px; 
             background: rgba(255, 255, 255, 0.06); 
             color: var(--apple-blue); 
             font-weight: 600; 
@@ -337,23 +318,23 @@
         .price-section { 
             display: flex; 
             align-items: baseline; 
-            gap: 12px; 
-            margin-bottom: 14px; 
-            padding-bottom: 10px; 
+            gap: 10px; 
+            margin-bottom: 12px; 
+            padding-bottom: 8px; 
             border-bottom: 1px solid rgba(255, 255, 255, 0.06); 
         }
         
         .current-price { 
-            font-size: 26px; 
+            font-size: 24px; 
             font-weight: 700; 
             letter-spacing: -0.03em; 
         }
         
         .change-tag { 
-            font-size: 12px; 
+            font-size: 11px; 
             font-weight: 600; 
-            padding: 3px 8px; 
-            border-radius: 8px; 
+            padding: 2px 6px; 
+            border-radius: 6px; 
         }
 
         .up { color: var(--apple-red); }
@@ -365,12 +346,12 @@
         .details-grid { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
-            gap: 10px; 
-            font-size: 12px; 
-            margin-bottom: 14px; 
+            gap: 8px; 
+            font-size: 11px; 
+            margin-bottom: 12px; 
             background: var(--card-inner-bg); 
-            padding: 10px 14px; 
-            border-radius: 14px; 
+            padding: 10px 12px; 
+            border-radius: 12px; 
             border: 1px solid rgba(255, 255, 255, 0.04); 
         }
         
@@ -380,20 +361,39 @@
 
         .chart-container { 
             width: 100%; 
-            height: 220px; 
-            border-radius: 14px; 
+            height: 200px; 
+            border-radius: 12px; 
             background: var(--card-inner-bg); 
             border: 1px solid rgba(255, 255, 255, 0.04); 
-            margin-top: 10px;
+            margin-top: 8px;
         }
         
         .overview-chart-container { 
             width: 100%; 
-            height: 290px; 
-            border-radius: 16px; 
+            height: 250px; 
+            border-radius: 14px; 
             background: var(--card-inner-bg); 
             border: 1px solid rgba(255, 255, 255, 0.04); 
-            margin-top: 10px; 
+            margin-top: 8px; 
+        }
+
+        .footer-author {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 28px;
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 480px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .breakdown-bar {
+                grid-template-columns: 1fr;
+            }
         }
 
         @keyframes pulse {
@@ -411,14 +411,14 @@
         </div>
         <div class="status-bar">
             <div class="live-badge"><span class="live-dot"></span>实时同步</div>
-            <span>更新时间 <span id="update-time" class="tabular-num" style="color:var(--text-main); font-weight:500;">--:--:--</span></span>
+            <span><span id="update-time" class="tabular-num" style="color:var(--text-main); font-weight:500;">--:--:--</span></span>
         </div>
     </div>
 
     <div class="overview-card">
         <div class="overview-header">
             <div class="overview-title">
-                总资产 <span>Master Portfolio</span>
+                总资产 <span>Master</span>
             </div>
             <div class="chart-tabs" id="overview-tabs">
                 <button class="chart-tab active" onclick="loadOverviewChart('minute', this)">分时</button>
@@ -454,6 +454,10 @@
     </div>
 
     <div class="grid-container" id="board-container">
+    </div>
+
+    <div class="footer-author">
+        作者：韩斌
     </div>
 
     <script>
@@ -527,10 +531,10 @@
             }
             if (!mktValCurrency || mktValCurrency <= 0) {
                 const factors = {
-                    'sh603259': 2950000000, // 药明康德总股本约29.5亿股
-                    'hk02269': 4240000000,  // 药明生物总股本约42.4亿股
-                    'hk03696': 500000000,   // 英矽智能预估总股本
-                    'usPDD': 1360000000     // 拼多多总股本(ADS折算)约13.6亿
+                    'sh603259': 2950000000, 
+                    'hk02269': 4240000000,  
+                    'hk03696': 500000000,   
+                    'usPDD': 1360000000     
                 };
                 const shares = factors[id] || 1000000000;
                 mktValCurrency = currentPrice * shares;
@@ -617,7 +621,6 @@
             };
             document.body.appendChild(script2);
 
-            // 保持东方财富接口兜底（部分A股支持）
             stockConfigs.forEach(stock => {
                 const cbName = `cb_quote_${stock.id}_${Date.now()}`;
                 const script = document.createElement('script');
@@ -662,7 +665,7 @@
             let valDisplay = `¥${rmbValue.toLocaleString('zh-CN', {maximumFractionDigits: 0})}`;
             if (stock.lockedShares > 0) {
                 const tradableValRMB = data.current * stock.tradableShares * stock.fx;
-                valDisplay += ` <span style="font-size:10px; color:var(--apple-blue); background:rgba(10,132,255,0.12); padding:1px 5px; border-radius:5px; margin-left:4px; font-weight:normal;">可售 ¥${tradableValRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})}</span>`;
+                valDisplay += ` <span style="font-size:9px; color:var(--apple-blue); background:rgba(10,132,255,0.12); padding:1px 4px; border-radius:4px; margin-left:3px; font-weight:normal;">可售 ¥${tradableValRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})}</span>`;
             }
             document.getElementById(`rmb-val-${id}`).innerHTML = valDisplay;
             
@@ -671,7 +674,6 @@
             pnlEl.innerText = `${pnlSign}¥${rmbPnl.toLocaleString('zh-CN', {maximumFractionDigits: 0})}`;
             pnlEl.className = 'detail-value tabular-num ' + (rmbPnl > 0 ? 'up' : rmbPnl < 0 ? 'down' : '');
 
-            // 联动计算并更新公司市值（腾讯数据 + 智能总股本估算兜底，确保绝对不为空）
             const mktVal = calculateMarketVal(id, data.current, tencentArr);
             updateMarketValDisplay(id, data.currency, mktVal);
         }
@@ -697,24 +699,13 @@
                 const pnlSign = pnlRMB > 0 ? '+' : '';
                 const pnlClass = pnlRMB > 0 ? 'up' : pnlRMB < 0 ? 'down' : '';
 
-                let extraSub = '';
-                if (stock.lockedShares > 0) {
-                    extraSub = `
-                        <div style="font-size:10px; color:var(--apple-blue); margin-top:3px; display:flex; justify-content:space-between; border-top:1px dashed rgba(255,255,255,0.06); padding-top:3px;">
-                            <span>可售金额</span>
-                            <span class="tabular-num">¥${tradableValRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})}</span>
-                        </div>
-                    `;
-                }
-
                 breakdownHtml += `
                     <div class="breakdown-item">
                         <div class="breakdown-header-row">
                             <span class="breakdown-name">${stock.name}</span>
                             <span class="breakdown-pnl tabular-num ${pnlClass}">${pnlSign}¥${pnlRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})}</span>
                         </div>
-                        <div class="breakdown-val tabular-num">¥${valRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})} <span style="font-size:11px; color:var(--text-sub); font-weight:normal;">(${stock.shares.toLocaleString()}股)</span></div>
-                        ${extraSub}
+                        <div class="breakdown-val tabular-num">¥${valRMB.toLocaleString('zh-CN', {maximumFractionDigits: 0})} <span style="font-size:10px; color:var(--text-sub); font-weight:normal;">(${stock.shares.toLocaleString()}股)</span></div>
                     </div>
                 `;
             });
@@ -729,7 +720,7 @@
                 totalPnlEl.innerText = `${totalPnlSign}¥${totalDailyPnlRMB.toLocaleString('zh-CN', {maximumFractionDigits: 2})}`;
                 totalPnlEl.className = 'metric-value tabular-num ' + (totalDailyPnlRMB > 0 ? 'up' : totalDailyPnlRMB < 0 ? 'down' : '');
                 
-                document.getElementById('total-change-pct-sub').innerHTML = `当日变化: <span class="${totalDailyPnlRMB > 0 ? 'up' : totalDailyPnlRMB < 0 ? 'down' : ''}">${totalPnlSign}${totalPnlPct.toFixed(2)}%</span>`;
+                document.getElementById('total-change-pct-sub').innerHTML = `变动: <span class="${totalDailyPnlRMB > 0 ? 'up' : totalDailyPnlRMB < 0 ? 'down' : ''}">${totalPnlSign}${totalPnlPct.toFixed(2)}%</span>`;
                 document.getElementById('breakdown-bar').innerHTML = breakdownHtml;
             }
         }
@@ -860,9 +851,9 @@
             backgroundColor: 'rgba(32, 32, 35, 0.92)',
             borderColor: 'rgba(255, 255, 255, 0.12)',
             borderWidth: 1,
-            borderRadius: 12,
-            padding: [10, 14],
-            textStyle: { color: '#ffffff', fontSize: 12, fontFamily: '-apple-system' },
+            borderRadius: 10,
+            padding: [8, 12],
+            textStyle: { color: '#ffffff', fontSize: 11, fontFamily: '-apple-system' },
             extraCssText: 'backdrop-filter: blur(12px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);'
         };
 
@@ -904,22 +895,22 @@
             });
 
             const option = {
-                grid: { left: 55, right: 16, top: 20, bottom: 25 },
+                grid: { left: 48, right: 12, top: 16, bottom: 22 },
                 tooltip: { 
                     ...appleTooltipConfig,
                     trigger: 'axis', 
                     axisPointer: { type: 'line', lineStyle: { color: 'rgba(255,255,255,0.2)', type: 'solid' } },
                     formatter: function(params) {
                         const p = params[0];
-                        return `<div style="color:rgba(235,235,245,0.6);font-size:11px;margin-bottom:4px;">时间：${p.name}</div><div style="font-weight:600;">总资产：¥${p.value.toLocaleString()}</div>`;
+                        return `<div style="color:rgba(235,235,245,0.6);font-size:10px;margin-bottom:2px;">时间：${p.name}</div><div style="font-weight:600;">总资产：¥${p.value.toLocaleString()}</div>`;
                     }
                 },
-                xAxis: { type: 'category', data: times, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                xAxis: { type: 'category', data: times, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 9 } },
                 yAxis: { 
                     type: 'value', 
                     scale: true, 
                     splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, 
-                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10, formatter: val => '¥' + (val/10000).toFixed(1) + '万' }
+                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 9, formatter: val => '¥' + (val/10000).toFixed(1) + '万' }
                 },
                 series: [{
                     type: 'line',
@@ -991,7 +982,7 @@
             });
 
             const option = {
-                grid: { left: 55, right: 16, top: 20, bottom: 25 },
+                grid: { left: 48, right: 12, top: 16, bottom: 22 },
                 tooltip: {
                     ...appleTooltipConfig,
                     trigger: 'axis',
@@ -999,17 +990,17 @@
                     formatter: function (params) {
                         const p = params[0];
                         if (!p || !p.data) return '';
-                        return `<div style="color:rgba(235,235,245,0.6);font-size:11px;margin-bottom:4px;">日期：${p.name}</div>` +
+                        return `<div style="color:rgba(235,235,245,0.6);font-size:10px;margin-bottom:2px;">日期：${p.name}</div>` +
                                `期初：¥${p.data[1].toLocaleString()}<br/>期末：¥${p.data[2].toLocaleString()}<br/>` +
                                `最低：¥${p.data[3].toLocaleString()}<br/>最高：¥${p.data[4].toLocaleString()}`;
                     }
                 },
-                xAxis: { type: 'category', data: dates, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                xAxis: { type: 'category', data: dates, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 9 } },
                 yAxis: { 
                     type: 'value', 
                     scale: true, 
                     splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, 
-                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10, formatter: val => '¥' + (val/10000).toFixed(1) + '万' }
+                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 9, formatter: val => '¥' + (val/10000).toFixed(1) + '万' }
                 },
                 dataZoom: [{ type: 'inside', start: 0, end: 100 }],
                 series: [{
@@ -1039,18 +1030,18 @@
             });
 
             const option = {
-                grid: { left: 42, right: 12, top: 15, bottom: 22 },
+                grid: { left: 38, right: 10, top: 12, bottom: 20 },
                 tooltip: { 
                     ...appleTooltipConfig,
                     trigger: 'axis', 
                     axisPointer: { type: 'line', lineStyle: { color: 'rgba(255,255,255,0.2)' } }
                 },
-                xAxis: { type: 'category', data: times, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                xAxis: { type: 'category', data: times, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 9 } },
                 yAxis: { 
                     type: 'value', 
                     scale: true, 
                     splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, 
-                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 }
+                    axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 9 }
                 },
                 series: [{
                     type: 'line',
@@ -1088,19 +1079,19 @@
             });
 
             const option = {
-                grid: { left: 42, right: 12, top: 15, bottom: 22 },
+                grid: { left: 38, right: 10, top: 12, bottom: 20 },
                 tooltip: {
                     ...appleTooltipConfig,
                     trigger: 'axis',
                     axisPointer: { type: 'line', lineStyle: { color: 'rgba(255,255,255,0.2)' } },
                     formatter: function (params) {
                         const p = params[0];
-                        return `<div style="color:rgba(235,235,245,0.6);font-size:11px;margin-bottom:4px;">日期：${p.name}</div>` +
+                        return `<div style="color:rgba(235,235,245,0.6);font-size:10px;margin-bottom:2px;">日期：${p.name}</div>` +
                                `开：${p.data[1]} | 收：${p.data[2]}<br/>低：${p.data[3]} | 高：${p.data[4]}`;
                     }
                 },
-                xAxis: { type: 'category', data: dates, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
-                yAxis: { type: 'value', scale: true, splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 10 } },
+                xAxis: { type: 'category', data: dates, axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 9 } },
+                yAxis: { type: 'value', scale: true, splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)', type: 'dashed' } }, axisLabel: { color: 'rgba(235,235,245,0.4)', fontSize: 9 } },
                 dataZoom: [{ type: 'inside', start: 20, end: 100 }],
                 series: [{
                     type: 'candlestick',

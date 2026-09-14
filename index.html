@@ -379,11 +379,22 @@
 
         .footer-author {
             text-align: center;
-            font-size: 11px;
-            color: var(--text-tertiary);
-            margin-top: 28px;
-            margin-bottom: 8px;
-            letter-spacing: 0.05em;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-top: 32px;
+            margin-bottom: 12px;
+            letter-spacing: 0.08em;
+            font-weight: 500;
+        }
+
+        .footer-author span {
+            color: var(--apple-blue);
+            font-weight: 600;
+            background: rgba(10, 132, 255, 0.1);
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(10, 132, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(10, 132, 255, 0.15);
         }
 
         @media (max-width: 480px) {
@@ -420,13 +431,6 @@
             <div class="overview-title">
                 总资产 <span>Master</span>
             </div>
-            <div class="chart-tabs" id="overview-tabs">
-                <button class="chart-tab active" onclick="loadOverviewChart('minute', this)">分时</button>
-                <button class="chart-tab" onclick="loadOverviewChart('day', this)">日K</button>
-                <button class="chart-tab" onclick="loadOverviewChart('week', this)">周K</button>
-                <button class="chart-tab" onclick="loadOverviewChart('month', this)">月K</button>
-                <button class="chart-tab" onclick="loadOverviewChart('year', this)">年K</button>
-            </div>
         </div>
 
         <div class="metrics-grid">
@@ -450,6 +454,17 @@
         <div class="breakdown-bar" id="breakdown-bar">
         </div>
 
+        <!-- 将总资产图表的切换按钮移至K线图上方 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; margin-bottom: 8px;">
+            <span style="font-size: 12px; color: var(--text-sub); font-weight: 500;">总资产走势</span>
+            <div class="chart-tabs" id="overview-tabs">
+                <button class="chart-tab active" onclick="loadOverviewChart('minute', this)">分时</button>
+                <button class="chart-tab" onclick="loadOverviewChart('day', this)">日K</button>
+                <button class="chart-tab" onclick="loadOverviewChart('week', this)">周K</button>
+                <button class="chart-tab" onclick="loadOverviewChart('month', this)">月K</button>
+                <button class="chart-tab" onclick="loadOverviewChart('year', this)">年K</button>
+            </div>
+        </div>
         <div class="overview-chart-container" id="overview-chart"></div>
     </div>
 
@@ -457,7 +472,7 @@
     </div>
 
     <div class="footer-author">
-        作者：韩斌
+        <span>作者：韩斌</span>
     </div>
 
     <script>
